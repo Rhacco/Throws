@@ -31,7 +31,7 @@ public class Board : MonoBehaviour
         if (!GameRunning)
             return;
         if (waitingBall == null)
-            waitingBall = Instantiate(ballSpawn);
+            waitingBall = Instantiate(ballSpawn, transform, true);
         if (Input.GetMouseButton(0))
         {
             if (previewBall == null)
@@ -44,15 +44,13 @@ public class Board : MonoBehaviour
 
     void SpawnThrowPreview()
     {
-        previewBall = Instantiate(throwPreview);
-        var l = new GameObject();
-        var start = waitingBall.transform.position;
-        start.y = 0.01f;
-        l.transform.position = start;
-        l.AddComponent<LineRenderer>();
-        previewLine = l.GetComponent<LineRenderer>();
+        previewBall = Instantiate(throwPreview, transform, true);
+        waitingBall.AddComponent<LineRenderer>();
+        previewLine = waitingBall.GetComponent<LineRenderer>();
         previewLine.startWidth = 0.2f;
         previewLine.endWidth = 0.4f;
+        var start = waitingBall.transform.position;
+        start.y = 0.01f;
         previewLine.SetPosition(0, start);
         var end = previewBall.transform.position;
         end.y = 0.01f;
@@ -79,11 +77,10 @@ public class Board : MonoBehaviour
         var dir = previewBall.transform.position - waitingBall.transform.position;
         var f = 69 * (float)Math.Log(dir.magnitude, 1000);
         dir.y = 10;
-        waitingBall.GetComponent<Rigidbody>().AddForce(f * dir);
-        waitingBall.GetComponent<Rigidbody>().useGravity = true;
+        waitingBall.AddComponent<Rigidbody>().AddForce(f * dir);
         flyingBalls.Add(waitingBall);
         destinations.Add(previewBall.transform.position);
-        waitingBall = Instantiate(ballSpawn);
+        waitingBall = Instantiate(ballSpawn, transform, true);
         Destroy(previewBall);
         Destroy(previewLine);
     }
