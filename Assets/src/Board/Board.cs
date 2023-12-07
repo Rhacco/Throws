@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class Board : MonoBehaviour
 {
+    public GameObject cover;
     public GameObject ballSpawn;
     public GameObject throwPreview;
+    public int numElementsX = 10;
+    public int numElementsZ = 10;
     public bool GameRunning
     {
         get => gameRunning;
@@ -15,12 +18,14 @@ public class Board : MonoBehaviour
             Destroy(previewBall);
             Destroy(previewLine);
             Time.timeScale = value ? 1 : 0;
+            cover.SetActive(!value);
         }
     }
     private bool gameRunning = false;
     private GameObject waitingBall = null;
     private GameObject previewBall = null;
     private LineRenderer previewLine = null;
+    private readonly float hoverY = 0.033f;
     private Vector3 mp;
     private readonly List<GameObject> flyingBalls = new();
     private readonly List<Vector3> destinations = new();
@@ -47,13 +52,14 @@ public class Board : MonoBehaviour
         previewBall = Instantiate(throwPreview, transform, true);
         waitingBall.AddComponent<LineRenderer>();
         previewLine = waitingBall.GetComponent<LineRenderer>();
+        previewLine.material.color = Color.cyan;
         previewLine.startWidth = 0.2f;
         previewLine.endWidth = 0.4f;
         var start = waitingBall.transform.position;
-        start.y = 0.01f;
+        start.y = hoverY;
         previewLine.SetPosition(0, start);
         var end = previewBall.transform.position;
-        end.y = 0.01f;
+        end.y = hoverY;
         previewLine.SetPosition(1, end);
         mp = Input.mousePosition;
     }
@@ -62,12 +68,12 @@ public class Board : MonoBehaviour
     {
         var pbp = previewBall.transform.position;
         var diff = Input.mousePosition - mp;
-        diff *= 0.1f;
+        diff *= 0.069f;
         var x = Math.Max(-5, Math.Min(pbp.x + diff.x, 5));
         var z = Math.Max(0, Math.Min(pbp.z + diff.y, 15));
         previewBall.transform.position = new Vector3(x, 0, z);
         var end = previewBall.transform.position;
-        end.y = 0.01f;
+        end.y = hoverY;
         previewLine.SetPosition(1, end);
         mp = Input.mousePosition;
     }
@@ -89,14 +95,15 @@ public class Board : MonoBehaviour
     {
         for (int i = 0; i < flyingBalls.Count; i++)
         {
-            var flying = flyingBalls[i];
-            var fp = flying.transform.position;
-            if (flying.transform.position.y < 0)
-                flying.transform.position = new Vector3(fp.x, 0, fp.z);
+            var f = flyingBalls[i];
+            f.SetActive(GameRunning);
+            var fp = f.transform.position;
+            if (fp.y < 0) fp.y = 0;
+            f.transform.position = fp;
             if (fp.z > destinations[i].z)
             {
-                flying.transform.position = destinations[i];
-                Destroy(flying.GetComponent<Rigidbody>());
+                f.transform.position = destinations[i];
+                Destroy(f.GetComponent<Rigidbody>());
                 flyingBalls.RemoveAt(i);
                 destinations.RemoveAt(i);
                 return;
