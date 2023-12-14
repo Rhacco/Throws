@@ -1,14 +1,12 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Board : MonoBehaviour
 {
     public GameObject cover;
+    public Difficulty difficulty;
     public GameObject ballSpawn;
     public GameObject throwPreview;
-    public int numElementsX = 10;
-    public int numElementsZ = 10;
     public bool GameRunning
     {
         get => gameRunning;
@@ -29,6 +27,29 @@ public class Board : MonoBehaviour
     private Vector3 mp;
     private readonly List<GameObject> flyingBalls = new();
     private readonly List<Vector3> destinations = new();
+
+    public List<List<Vector3>> RandomizedFieldXZ(Vector3 start, Vector3 end)
+    {
+        var numX = 3 + (2 * difficulty.Selected);
+        var numZ = 5 + (3 * difficulty.Selected);
+        var v = 0.2f; v += v * 2 * difficulty.Selected;
+        var rf = new List<List<Vector3>>();
+        var d = (end.x - start.x) / numX;
+        end = new Vector3(start.x, 0, end.z);
+        for (int i = 0; i < numX + 1; i++)
+        { rf.Add(RandomizedLine(start, end, numZ, v)); start.x += d; end.x += d; }
+        return rf;
+    }
+
+    private List<Vector3> RandomizedLine(Vector3 start, Vector3 end, int num, float variance)
+    {
+        var l = new List<Vector3>() { start };
+        var d = (end - start) / num;
+        for (int i = 1; i < num; i++)
+            l.Add(start + (i * d) - ((Random.value - 0.5f) * variance * i * d));
+        l.Add(end);
+        return l;
+    }
 
     void Update()
     {
@@ -69,8 +90,8 @@ public class Board : MonoBehaviour
         var pbp = previewBall.transform.position;
         var diff = Input.mousePosition - mp;
         diff *= 0.069f;
-        var x = Math.Max(-5, Math.Min(pbp.x + diff.x, 5));
-        var z = Math.Max(0, Math.Min(pbp.z + diff.y, 15));
+        var x = System.Math.Max(-5, System.Math.Min(pbp.x + diff.x, 5));
+        var z = System.Math.Max(0, System.Math.Min(pbp.z + diff.y, 15));
         previewBall.transform.position = new Vector3(x, 0, z);
         var end = previewBall.transform.position;
         end.y = hoverY;
@@ -81,7 +102,7 @@ public class Board : MonoBehaviour
     void ThrowBall()
     {
         var dir = previewBall.transform.position - waitingBall.transform.position;
-        var f = 69 * (float)Math.Log(dir.magnitude, 1000);
+        var f = 69 * (float)System.Math.Log(dir.magnitude, 1000);
         dir.y = 10;
         waitingBall.AddComponent<Rigidbody>().AddForce(f * dir);
         flyingBalls.Add(waitingBall);
